@@ -1,0 +1,15 @@
+{{- if .Values.einvoicehub.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: {{ .Values.einvoicehub.service.name }}
+  name: {{ .Values.einvoicehub.service.name }}
+spec:
+  ports:
+    - name: "http"
+      port: {{ .Values.einvoicehub.service.port }}
+      targetPort: {{ .Values.einvoicehub.service.targetPort }}
+  selector:
+    app: {{ .Values.einvoicehub.service.name }}
+{{- end }}

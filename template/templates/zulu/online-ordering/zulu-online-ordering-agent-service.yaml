@@ -1,0 +1,16 @@
+{{- if .Values.zuluOnlineOrderingAgent.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: {{ .Values.zuluOnlineOrderingAgent.service.name }}
+  name: {{ .Values.zuluOnlineOrderingAgent.service.name }}
+spec:
+  type: {{ .Values.zuluOnlineOrderingAgent.service.type }}
+  ports:
+    - name: "http"
+      port: {{ .Values.zuluOnlineOrderingAgent.service.port }}
+      targetPort: {{ .Values.zuluOnlineOrderingAgent.service.targetPort }}
+  selector:
+    app: {{ .Values.zuluOnlineOrderingAgent.service.name }}
+{{- end}}

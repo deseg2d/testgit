@@ -1,0 +1,16 @@
+apiVersion: one.2dsoft.com/v1
+kind: OneDeployment
+metadata:
+  name: deployment-{{ .Release.Namespace }}
+  labels:
+    base_namespace: rs-garson-one
+    region: rs
+    channelType: standard
+    channel: stable
+
+spec:
+  product: garson
+  region: rs
+  channelType: standard
+  channel: stable
+  version: {{ .Chart.AppVersion }}

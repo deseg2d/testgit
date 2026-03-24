@@ -1,0 +1,40 @@
+{{- if .Values.eventDispatcher.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: {{ .Values.eventDispatcher.service.name }}
+  name: {{ .Values.eventDispatcher.service.name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.eventDispatcher.service.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.eventDispatcher.service.name }}
+    spec:
+      containers:
+        - name: {{ .Values.eventDispatcher.service.name }}
+          image: "{{ .Values.eventDispatcher.image.repository }}:{{ .Values.eventDispatcher.image.tag }}"
+          env:
+          {{- range .Values.eventDispatcher.env }}
+            - name: "{{ .name }}"
+              value: "{{ .value }}"
+          {{- end }}
+
+          # Add readinessProbe if defined
+          {{- if .Values.eventDispatcher.readinessProbe }}
+          readinessProbe:
+            {{- toYaml .Values.eventDispatcher.readinessProbe | nindent 12 }}
+          {{- end }}
+
+          # Add livenessProbe if defined
+          {{- if .Values.eventDispatcher.livenessProbe }}
+          livenessProbe:
+            {{- toYaml .Values.eventDispatcher.livenessProbe | nindent 12 }}
+          {{- end }}
+          
+      restartPolicy: Always
+{{- end }}

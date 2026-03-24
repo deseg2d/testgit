@@ -1,0 +1,545 @@
+global:
+  imagePullSecrets: 
+    - name: do-registry-secret
+
+client:
+  image:
+    repository: registry.digitalocean.com/main-2dsoft/garson-backoffice-client-srb
+    tag: "1.0.29.0"
+    pullPolicy: IfNotPresent
+
+  service:
+    type: ClusterIP
+    name: backoffice-client
+    port: 5000
+    targetPort: 5000
+
+  replicaCount: 1
+
+  env:
+    - name: ASPNETCORE_ENVIRONMENT
+      value: Docker
+    - name: REVERSEPROXY__CLUSTERS__APPSERVER__DESTINATIONS__DESTINATION1__ADDRESS
+      value: http://backoffice-server:5000/
+
+    # Route 1: /api/v1/{**catch-all}
+    - name: REVERSEPROXY__ROUTES__ROUTE1__MATCH__PATH
+      value: /api/v1/{**catch-all}
+    - name: REVERSEPROXY__ROUTES__ROUTE1__CLUSTERID
+      value: AppServer
+    - name: REVERSEPROXY__ROUTES__ROUTE1__TRANSFORMS__0__REQUESTHEADERORIGINALHOST
+      value: true
+
+    # Route 2: /integrations/{**catch-all}
+    - name: REVERSEPROXY__ROUTES__ROUTE2__MATCH__PATH
+      value: /integrations/{**catch-all}
+    - name: REVERSEPROXY__ROUTES__ROUTE2__CLUSTERID
+      value: AppServer
+    - name: REVERSEPROXY__ROUTES__ROUTE2__TRANSFORMS__0__REQUESTHEADERORIGINALHOST
+      value: true
+
+    - name: SERILOG__MINIMUMLEVEL__DEFAULT
+      value: Debug
+
+server:
+  image:
+    repository: registry.digitalocean.com/main-2dsoft/garson-backoffice-server-srb
+    tag: "1.0.29.0"
+    pullPolicy: IfNotPresent
+
+  service:
+    type: ClusterIP
+    name: backoffice-server
+    port: 5000
+    targetPort: 5000
+
+  replicaCount: 1
+
+  env:
+    - name: ASPNETCORE_ENVIRONMENT
+      value: Docker
+    - name: InventoryPostingEnpoint
+      value: http://backoffice-inventory:5000/
+    - name: SERILOG__MINIMUMLEVEL__DEFAULT
+      value: Debug
+    - name: TZ
+      value: Europe/Belgrade
+    - name: TenantConfiguration__SingleTenant__Enabled
+      value: false
+    - name: TenantConfiguration__MultiTenant__Enabled
+      value: true
+    - name: TenantConfiguration__MultiTenant__DbRoot
+      value: /opt/firebird/databases/backoffice-srb
+    - name: TenantConfiguration__MultiTenant__DbName
+      value: BACKOFFICE.FDB
+    - name: TenantConfiguration__MultiTenant__HostName
+      value: 10.114.80.9
+    - name: TenantConfiguration__MultiTenant__Username
+      value: SYSDBA
+    - name: TenantConfiguration__MultiTenant__Password
+      value: masterkey
+    - name: TenantConfiguration__MultiTenant__Port
+      value: "3050"
+    - name: EInvoiceHubEndpoint
+      value: http://einvoicehub:5000
+    - name: OrderingIntegrations__RequestLoggerConfiguration__HostName
+      value: 10.114.80.9
+    - name: OrderingIntegrations__RequestLoggerConfiguration__Path
+      value: /opt/firebird/databases/ordering-integrations/rs-garson-one-ordering-integration-requests.fdb
+    - name: OrderingIntegrations__RequestLoggerConfiguration__LogFilesPath
+      value: ""      
+    - name: ZuluDispatcherBaseUrl
+      value: http://zulu-dispatcher.zulu-dispatcher-rs.svc.cluster.local:5000
+    - name: ZuluTableOrderingUrlTemplate
+      value: https://[TENANT].rs.self-order.zulu.2dsoft.work
+    - name: ZuluOnlineOrderingServerDefaultUrl
+      value: ""
+    - name: BackOfficeEventDispatcherAddress
+      value: http://backoffice-event-dispatcher:5000/
+
+inventory:
+  image:
+    repository: registry.digitalocean.com/main-2dsoft/garson-backoffice-inventory-srb
+    tag: "1.0.29.0"
+    pullPolicy: IfNotPresent
+
+  service:
+    type: ClusterIP
+    name: backoffice-inventory
+    port: 5000
+    targetPort: 5000
+
+  replicaCount: 1
+
+  env:
+    - name: ASPNETCORE_ENVIRONMENT
+      value: Docker
+    - name: SERILOG__MINIMUMLEVEL__DEFAULT
+      value: Debug
+    - name: TenantConfiguration__SingleTenant__Enabled
+      value: false
+    - name: TenantConfiguration__MultiTenant__Enabled
+      value: true
+    - name: TenantConfiguration__MultiTenant__DbRoot
+      value: /opt/firebird/databases/backoffice-srb
+    - name: TenantConfiguration__MultiTenant__DbName
+      value: BACKOFFICE.FDB
+    - name: TenantConfiguration__MultiTenant__HostName
+      value: 10.114.80.9
+    - name: TenantConfiguration__MultiTenant__Username
+      value: SYSDBA
+    - name: TenantConfiguration__MultiTenant__Password
+      value: masterkey
+    - name: TenantConfiguration__MultiTenant__Port
+      value: "3050"
+
+
+live:
+  image:
+    repository: registry.digitalocean.com/main-2dsoft/garson-live-srb
+    tag: "1.0.29.0"
+    pullPolicy: IfNotPresent
+
+  service:
+    type: ClusterIP
+    name: backoffice-live
+    port: 5000
+    targetPort: 5000
+
+  replicaCount: 1
+
+  env:
+    - name: ASPNETCORE_ENVIRONMENT
+      value: Docker
+    - name: SERILOG__MINIMUMLEVEL__DEFAULT
+      value: Debug
+
+woltAgent:
+  image:
+    repository: registry.digitalocean.com/main-2dsoft/garson-wolt-agent-srb
+    tag: "1.0.29.0"
+    pullPolicy: IfNotPresent
+
+  service:
+    type: ClusterIP
+    name: backoffice-wolt-agent
+    port: 5000
+    targetPort: 5000
+
+  replicaCount: 1
+
+  env:
+    - name: ASPNETCORE_ENVIRONMENT
+      value: Docker
+    - name: SERILOG__MINIMUMLEVEL__DEFAULT
+      value: Debug
+    - name: ServiceDataRootPath
+      value: ""
+    - name: DATABASEINFO__HOSTNAME
+      value: 10.114.80.9
+    - name: DATABASEINFO__PORT
+      value: 3050
+    - name: DATABASEINFO__PATH
+      value: /opt/firebird/databases/wolt-srb/WoltOnlineOrdering.fdb
+    - name: DATABASEINFO__USERNAME
+      value: SYSDBA
+    - name: DATABASEINFO__PASSWORD
+      value: masterkey
+    - name: RequestLoggerConfiguration__HostName
+      value: 10.114.80.9
+    - name: RequestLoggerConfiguration__Path
+      value: /opt/firebird/databases/wolt-srb/wolt-agent-requests.fdb
+    - name: RequestLoggerConfiguration__LogFilesPath
+      value: ""
+    - name: SingleTenantMode
+      value: false
+    - name: LogRetentionDays
+      value: 5
+    - name: BackOfficeUrl
+      value: http://backoffice-server:5000
+
+
+
+zuluOnlineOrderingAgent:
+  image:
+    repository: registry.digitalocean.com/main-2dsoft/garson-zulu-online-ordering-agent-srb
+    tag: "1.1.0.0"
+    pullPolicy: IfNotPresent
+
+  service:
+    type: ClusterIP
+    name: backoffice-zulu-online-ordering-agent
+    port: 5000
+    targetPort: 5000
+
+  replicaCount: 1
+
+  env:
+    - name: ASPNETCORE_ENVIRONMENT
+      value: Docker
+    - name: SERILOG__MINIMUMLEVEL__DEFAULT
+      value: Debug
+    - name: ServiceDataRootPath
+      value: /opt/firebird/databases/zulu-srb
+    - name: RequestLoggerConfiguration__HostName
+      value: 10.114.80.9
+    - name: RequestLoggerConfiguration__Path
+      value: /opt/firebird/databases/zulu-srb/ZuluOnlineOrdering.fdb
+    - name: RequestLoggerConfiguration__LogFilesPath
+      value: ""
+
+zuluTableOrderingAgent:
+  image:
+    repository: registry.digitalocean.com/main-2dsoft/garson-zulu-table-ordering-agent-srb
+    tag: "1.1.0.0"
+    pullPolicy: IfNotPresent
+
+  service:
+    type: ClusterIP
+    name: backoffice-zulu-table-ordering-agent
+    port: 5000
+    targetPort: 5000
+
+  replicaCount: 1
+
+  env:
+    - name: ASPNETCORE_ENVIRONMENT
+      value: Docker
+    - name: SERILOG__MINIMUMLEVEL__DEFAULT
+      value: Debug
+    - name: ServiceDataRootPath
+      value: /opt/firebird/databases/zulu-srb
+    - name: RequestLoggerConfiguration__HostName
+      value: 10.114.80.9
+    - name: RequestLoggerConfiguration__Path
+      value: /opt/firebird/databases/zulu-srb/zulu-table-ordering-agent-requests.fdb
+    - name: RequestLoggerConfiguration__LogFilesPath
+      value: ""
+    - name: BackOfficeUrl
+      value: http://backoffice-server:5000
+    - name: SingleTenantMode
+      value: false
+    - name: BackOfficeUrlTemplate
+      value: https://[TENANT].rs.backoffice.garsonone.2dsoft.work 
+    - name: ZuluTableServerUrl
+      value: http://zulu-table-ordering-server:5000
+
+kioskSimulator:
+  image:
+    repository: registry.digitalocean.com/main-2dsoft/garson-backoffice-kiosk-simulator-srb
+    tag: "1.0.29.0"
+    pullPolicy: IfNotPresent
+
+  service:
+    type: ClusterIP
+    name: backoffice-kiosk-simulator
+    port: 5000
+    targetPort: 5000
+
+  replicaCount: 1
+
+  env:
+    - name: ASPNETCORE_ENVIRONMENT
+      value: Docker
+    - name: REVERSEPROXY__CLUSTERS__APPSERVER__DESTINATIONS__DESTINATION1__ADDRESS
+      value: http://backoffice-server:5000/
+
+    - name: REVERSEPROXY__ROUTES__ROUTE1__MATCH__PATH
+      value: /api/v1/{**catch-all}
+    - name: REVERSEPROXY__ROUTES__ROUTE1__CLUSTERID
+      value: AppServer
+    - name: REVERSEPROXY__ROUTES__ROUTE1__TRANSFORMS__0__REQUESTHEADERORIGINALHOST
+      value: true
+
+    - name: SERILOG__MINIMUMLEVEL__DEFAULT
+      value: Debug
+
+eventDispatcher:
+  image:
+    repository: registry.digitalocean.com/main-2dsoft/garson-backoffice-event-dispatcher-srb
+    tag: "1.0.29.0"
+    pullPolicy: IfNotPresent
+
+  service:
+    type: ClusterIP
+    name: backoffice-event-dispatcher
+    port: 5000
+    targetPort: 5000
+
+  replicaCount: 1
+
+  env:
+    - name: ASPNETCORE_ENVIRONMENT
+      value: Docker
+    - name: BackOfficeUrl
+      value: http://backoffice-server:5000/
+    - name: SERILOG__MINIMUMLEVEL__DEFAULT
+      value: Debug
+    - name: RetrieveEventsJobIntervalSec
+      value: 100
+
+
+operator:
+  image:
+    repository: registry.digitalocean.com/main-2dsoft/garson-backoffice-operator-srb
+    tag: "1.0.29.0"
+    pullPolicy: IfNotPresent
+
+  service:
+    type: ClusterIP
+    name: backoffice-operator
+    port: 5000
+    targetPort: 5000
+
+  serviceAccount:
+    create: true
+    name: backoffice-operator-sa
+    
+  replicaCount: 1
+
+  env:
+    - name: ASPNETCORE_ENVIRONMENT
+      value: Docker
+    - name: KUBERNETES_ENVIRONMENT
+      value: Development
+    - name: SERILOG__MINIMUMLEVEL__DEFAULT
+      value: Debug
+
+
+einvoicehub:
+  image:
+    repository: registry.digitalocean.com/main-2dsoft/garson-einvoicehub-srb
+    tag: "1.0.29.0"
+    pullPolicy: IfNotPresent
+
+  service:
+    type: ClusterIP
+    name: einvoicehub
+    port: 5000
+    targetPort: 5000
+
+  replicaCount: 1
+
+  env:
+    - name: ASPNETCORE_ENVIRONMENT
+      value: Docker
+    - name: BackOfficeUrl
+      value: http://backoffice-server:5000
+    - name: TenantEndpoint
+      value: http://backoffice-operator:5000/api/tenants
+    - name: SefBaseUrl
+      value: https://demoefaktura.mfin.gov.rs/api/publicApi/
+    - name: SERILOG__MINIMUMLEVEL__DEFAULT
+      value: Debug
+    - name: TZ
+      value: Europe/Belgrade
+    - name: RequestLoggerConfiguration__HostName
+      value: 10.114.80.9
+    - name: RequestLoggerConfiguration__Path
+      value: /opt/firebird/databases/einvoicehub/rs-garson-one-einvoicehub-requests.fdb
+    - name: RequestLoggerConfiguration__LogFilesPath
+      value: ""
+
+
+  livenessProbe:
+    httpGet:
+      path: /health
+      port: 5000
+    initialDelaySeconds: 10
+    periodSeconds: 20
+    timeoutSeconds: 2
+    failureThreshold: 3
+
+
+maintenance:
+  image:
+    repository: registry.digitalocean.com/main-2dsoft/garson-backoffice-maintenance-srb
+    tag: "1.0.29.0"
+    pullPolicy: IfNotPresent
+
+  service:
+    type: ClusterIP
+    name: backoffice-maintenance
+    port: 5000
+    targetPort: 5000
+
+  replicaCount: 1
+
+  env:
+    - name: ASPNETCORE_ENVIRONMENT
+      value: Docker
+    - name: TZ
+      value: Europe/Belgrade
+
+provisioning:
+  image:
+    repository: registry.digitalocean.com/main-2dsoft/garson-backoffice-provisioning-srb
+    tag: "1.0.29.0"
+    pullPolicy: IfNotPresent
+
+  service:
+    type: ClusterIP
+    name: backoffice-provisioning
+    port: 5000
+    targetPort: 5000
+
+  replicaCount: 1
+
+  env:
+    - name: ASPNETCORE_ENVIRONMENT
+      value: Docker
+    - name: SERILOG__MINIMUMLEVEL__DEFAULT
+      value: Debug
+    - name: TZ
+      value: Europe/Belgrade
+    - name: OrchestratorUrl
+      value: http://database-orchestrator.database-orchestrator.svc.cluster.local:5000
+    - name: OperatorUrl
+      value: http://backoffice-operator:5000
+    - name: WorkersCount
+      value: 10
+    - name: DatabaseServerOverride__Host
+      value: 10.114.80.9
+    - name: DatabaseServerOverride__Port
+      value: 3050
+    - name: DatabaseServerOverride__User
+      value: sysdba
+    - name: DatabaseServerOverride__Pass
+      value: masterkey
+    - name: DatabaseServerOverride__DbFolderPath
+      value: "/opt/firebird/databases/backoffice-srb"
+    - name: BackOfficeUrl
+      value: http://backoffice-server:5000
+
+
+zuluTableOrderingClient:
+  image:
+    repository: registry.digitalocean.com/main-2dsoft/garson-zulu-table-ordering-client-srb
+    tag: "1.0.29.0"
+    pullPolicy: IfNotPresent
+
+  service:
+    type: ClusterIP
+    name: zulu-table-ordering-client
+    port: 5000
+    targetPort: 5000
+
+  replicaCount: 1
+
+  env:
+    - name: ASPNETCORE_ENVIRONMENT
+      value: Docker
+    - name: REVERSEPROXY__CLUSTERS__APPSERVER__DESTINATIONS__DESTINATION1__ADDRESS
+      value: http://zulu-table-ordering-server:5000/
+
+    # Route 1: /api/v1/{**catch-all}
+    - name: REVERSEPROXY__ROUTES__ROUTE1__MATCH__PATH
+      value: /api/v1/{**catch-all}
+    - name: REVERSEPROXY__ROUTES__ROUTE1__CLUSTERID
+      value: AppServer
+    - name: REVERSEPROXY__ROUTES__ROUTE1__TRANSFORMS__0__REQUESTHEADERORIGINALHOST
+      value: true
+
+    # Route 2: /integrations/{**catch-all}
+    - name: REVERSEPROXY__ROUTES__ROUTE2__MATCH__PATH
+      value: /api/public/{**catch-all}
+    - name: REVERSEPROXY__ROUTES__ROUTE2__CLUSTERID
+      value: AppServer
+    - name: REVERSEPROXY__ROUTES__ROUTE2__TRANSFORMS__0__REQUESTHEADERORIGINALHOST
+      value: true
+
+    - name: Logging__LogLevel__Default
+      value: Debug
+
+zuluTableOrderingServer:
+  image:
+    repository: registry.digitalocean.com/main-2dsoft/garson-zulu-table-ordering-server-srb
+    tag: "1.0.29.0"
+    pullPolicy: IfNotPresent
+
+  service:
+    type: ClusterIP
+    name: zulu-table-ordering-server
+    port: 5000
+    targetPort: 5000
+
+  replicaCount: 1
+
+  env:
+    - name: ASPNETCORE_ENVIRONMENT
+      value: Docker
+    - name: SERILOG__MINIMUMLEVEL__DEFAULT
+      value: Debug
+    - name: TZ
+      value: Europe/Belgrade
+    - name: TenantConfiguration__SingleTenant__Enabled
+      value: false
+    - name: TenantConfiguration__MultiTenant__Enabled
+      value: true
+    - name: TenantConfiguration__MultiTenant__DbRoot
+      value: /opt/firebird/databases/backoffice-srb
+    - name: TenantConfiguration__MultiTenant__DbName
+      value: TABLEORDERING.FDB
+    - name: TenantConfiguration__MultiTenant__HostName
+      value: 10.114.80.9
+    - name: TenantConfiguration__MultiTenant__Username
+      value: SYSDBA
+    - name: TenantConfiguration__MultiTenant__Password
+      value: masterkey
+    - name: TenantConfiguration__MultiTenant__Port
+      value: "3050"
+    - name: RequestLoggerConfiguration__HostName
+      value: 10.114.80.9
+    - name: RequestLoggerConfiguration__Path
+      value: /opt/firebird/databases/zulu-srb/zulu-table-ordering-requests.fdb
+    - name: RequestLoggerConfiguration__LogFilesPath
+      value: ""
+    - name: PayspotSettings__UseRedirectionForCardPayment
+      value: false
+
+serviceAccount:
+  create: true
+  name: ""
+  automount: true
+
+

@@ -1,0 +1,66 @@
+client:
+  image:
+    tag: "1.1.64.0"
+
+server:
+  image:
+    tag: "1.1.64.0"
+
+inventory:
+  image:
+    tag: "1.1.64.0"
+
+live:
+  image:
+    tag: "1.1.64.0"
+
+woltAgent:
+  enabled: true
+  image:
+    tag: "1.1.64.0"
+
+zuluOnlineOrderingAgent:
+  enabled: false
+  image:
+    tag: "1.1.64.0"
+
+zuluTableOrderingAgent:
+  enabled: true
+  image:
+    tag: "1.1.64.0"
+
+kioskSimulator:
+  image:
+    tag: "1.1.64.0"
+
+operator:
+  image:
+    tag: "1.1.64.0"
+
+einvoicehub:
+  enabled: true
+  image:
+    tag: "1.1.64.0"
+
+provisioning:
+  image:
+    tag: "1.1.64.0"
+
+eventDispatcher:
+  enabled: true
+  image:
+    tag: "1.1.64.0"
+
+maintenance:
+  image:
+    tag: "1.1.64.0"
+
+zuluTableOrderingClient:
+  enabled: true
+  image:
+    tag: "1.0.211.0"
+
+zuluTableOrderingServer:
+  enabled: true
+  image:
+    tag: "1.0.211.0"

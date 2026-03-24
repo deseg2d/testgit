@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: {{ .Values.server.service.name }}
+  name: {{ .Values.server.service.name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.server.service.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.server.service.name }}
+    spec:
+      containers:
+        - name: {{ .Values.server.service.name }}
+          image: "{{ .Values.server.image.repository }}:{{ .Values.server.image.tag }}"
+          env:
+          {{- range .Values.server.env }}
+            - name: "{{ .name }}"
+              value: "{{ .value }}"
+          {{- end }}
+          resources:
+            requests:
+              memory: "500Mi"
+              cpu: "300m"
+            limits:
+              memory: "1500Mi"
+              cpu: "800m"
+      restartPolicy: Always
