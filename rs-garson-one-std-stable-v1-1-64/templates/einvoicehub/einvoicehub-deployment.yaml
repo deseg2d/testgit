@@ -1,0 +1,47 @@
+{{- if .Values.einvoicehub.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: {{ .Values.einvoicehub.service.name }}
+  name: {{ .Values.einvoicehub.service.name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.einvoicehub.service.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.einvoicehub.service.name }}
+    spec:
+      containers:
+        - name: {{ .Values.einvoicehub.service.name }}
+          image: "{{ .Values.einvoicehub.image.repository }}:{{ .Values.einvoicehub.image.tag }}"
+          env:
+          {{- range .Values.einvoicehub.env }}
+            - name: "{{ .name }}"
+              value: "{{ .value }}"
+          {{- end }}
+          resources:
+            requests:
+              memory: "200Mi"
+              cpu: "80m"
+            limits:
+              memory: "500Mi"
+              cpu: "150m"          
+
+          # Add readinessProbe if defined
+          {{- if .Values.einvoicehub.readinessProbe }}
+          readinessProbe:
+            {{- toYaml .Values.einvoicehub.readinessProbe | nindent 12 }}
+          {{- end }}
+
+          # Add livenessProbe if defined
+          {{- if .Values.einvoicehub.livenessProbe }}
+          livenessProbe:
+            {{- toYaml .Values.einvoicehub.livenessProbe | nindent 12 }}
+          {{- end }}
+          
+      restartPolicy: Always
+{{- end }}
