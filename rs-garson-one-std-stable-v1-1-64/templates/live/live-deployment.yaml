@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: {{ .Values.live.service.name }}
+  name: {{ .Values.live.service.name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.live.service.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.live.service.name }}
+    spec:
+      containers:
+        - name: {{ .Values.live.service.name }}
+          image: "{{ .Values.live.image.repository }}:{{ .Values.live.image.tag }}"
+          ports:
+            - containerPort: {{ .Values.live.service.targetPort }}
+              protocol: TCP
+          env:
+          {{- range .Values.live.env }}
+            - name: "{{ .name }}"
+              value: "{{ .value }}"
+          {{- end }}
+      restartPolicy: Always
