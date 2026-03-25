@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: {{ .Values.client.service.name }}
+  name: {{ .Values.client.service.name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.client.service.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.client.service.name }}
+    spec:
+      containers:
+        - name: {{ .Values.client.service.name }}
+          image: "{{ .Values.client.image.repository }}:{{ .Values.client.image.tag }}"
+          ports:
+            - containerPort: {{ .Values.client.service.targetPort }}
+              protocol: TCP
+          env:
+          {{- range .Values.client.env }}
+            - name: "{{ .name }}"
+              value: "{{ .value }}"
+          {{- end }}
+      restartPolicy: Always
