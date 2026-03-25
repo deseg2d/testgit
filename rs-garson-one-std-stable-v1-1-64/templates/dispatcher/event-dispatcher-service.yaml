@@ -1,0 +1,15 @@
+{{- if .Values.eventDispatcher.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: {{ .Values.eventDispatcher.service.name }}
+  name: {{ .Values.eventDispatcher.service.name }}
+spec:
+  ports:
+    - name: "http"
+      port: {{ .Values.eventDispatcher.service.port }}
+      targetPort: {{ .Values.eventDispatcher.service.targetPort }}
+  selector:
+    app: {{ .Values.eventDispatcher.service.name }}
+{{- end }}
