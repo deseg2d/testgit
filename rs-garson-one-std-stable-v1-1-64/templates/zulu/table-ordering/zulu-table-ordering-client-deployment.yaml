@@ -1,0 +1,30 @@
+{{- if .Values.zuluTableOrderingClient.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: {{ .Values.zuluTableOrderingClient.service.name }}
+  name: {{ .Values.zuluTableOrderingClient.service.name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.zuluTableOrderingClient.service.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.zuluTableOrderingClient.service.name }}
+    spec:
+      containers:
+        - name: {{ .Values.zuluTableOrderingClient.service.name }}
+          image: "{{ .Values.zuluTableOrderingClient.image.repository }}:{{ .Values.zuluTableOrderingClient.image.tag }}"
+          ports:
+            - containerPort: {{ .Values.zuluTableOrderingClient.service.targetPort }}
+              protocol: TCP
+          env:
+          {{- range .Values.zuluTableOrderingClient.env }}
+            - name: "{{ .name }}"
+              value: "{{ .value }}"
+          {{- end }}
+      restartPolicy: Always
+{{- end}}
