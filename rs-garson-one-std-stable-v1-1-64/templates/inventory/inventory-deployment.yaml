@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: {{ .Values.inventory.service.name }}
+  name: {{ .Values.inventory.service.name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.inventory.service.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.inventory.service.name }}
+    spec:
+      containers:
+        - name: {{ .Values.inventory.service.name }}
+          image: "{{ .Values.inventory.image.repository }}:{{ .Values.inventory.image.tag }}"
+          ports:
+            - containerPort: {{ .Values.inventory.service.targetPort }}
+              protocol: TCP
+          env:
+          {{- range .Values.inventory.env }}
+            - name: "{{ .name }}"
+              value: "{{ .value }}"
+          {{- end }}
+      restartPolicy: Always
