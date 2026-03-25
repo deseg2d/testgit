@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: {{ .Values.maintenance.service.name }}
+  name: {{ .Values.maintenance.service.name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.maintenance.service.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.maintenance.service.name }}
+    spec:
+      containers:
+        - name: {{ .Values.maintenance.service.name }}
+          image: "{{ .Values.maintenance.image.repository }}:{{ .Values.maintenance.image.tag }}"
+          ports:
+            - containerPort: {{ .Values.maintenance.service.targetPort }}
+              protocol: TCP
+          env:
+          {{- range .Values.maintenance.env }}
+            - name: "{{ .name }}"
+              value: "{{ .value }}"
+          {{- end }}
+      restartPolicy: Always
