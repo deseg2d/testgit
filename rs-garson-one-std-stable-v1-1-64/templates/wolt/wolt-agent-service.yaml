@@ -1,0 +1,16 @@
+{{- if .Values.woltAgent.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: {{ .Values.woltAgent.service.name }}
+  name: {{ .Values.woltAgent.service.name }}
+spec:
+  type: {{ .Values.woltAgent.service.type }}
+  ports:
+    - name: "http"
+      port: {{ .Values.woltAgent.service.port }}
+      targetPort: {{ .Values.woltAgent.service.targetPort }}
+  selector:
+    app: {{ .Values.woltAgent.service.name }}
+{{- end}}
